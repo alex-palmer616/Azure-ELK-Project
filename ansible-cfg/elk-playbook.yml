@@ -1,0 +1,51 @@
+---
+- name: Cofigure ELK VM(s) with Docker
+  hosts: elk
+  remote_user: apalmer
+  become: true
+  tasks:
+    # use the apt module to install docker.io
+    - name: Install docker.io
+      apt:
+        update_cache: yes
+        name: docker.io
+        state: present
+
+    # use the apt module to install python3-pip
+    - name: Install pip3
+      apt:
+        force_apt_get: yes
+        name: python3-pip
+        state: present
+
+    # use the pip module to install dockers Python module
+    - name: Install Docker Python Module
+      pip:
+        name: docker
+        state: present
+
+    # use the sysctl module to allow higher memory usage
+    - name: Increase maximum memory usage
+      sysctl:
+        name: vm.max_map_count
+        value: "262144"
+        state: present
+        reload: yes
+
+    # use the docker_container module to pull, install, and configure a ELK container
+    - name: Download and launch the Docker ELK Container
+      docker_container:
+        name: elk
+        image: sebp/elk:761
+        state: started
+        restart_policy: always
+        published_ports:
+          - 5601:5601
+          - 9200:9200
+          - 5044:5044
+
+    # use the systmd module to enable docker service on boot
+    - name: Enable Docker service on boot
+      systemd:
+        name: docker
+        enabled: yes

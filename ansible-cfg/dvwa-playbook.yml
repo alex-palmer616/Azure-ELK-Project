@@ -1,0 +1,35 @@
+---
+- name: Configure Web Hosts with Docker
+  hosts: webservers
+  become: true
+  tasks:
+  - name: docker.io
+    apt:
+      force_apt_get: yes
+      update_cache: yes
+      name: docker.io
+      state: present
+
+  - name: Install pip3 module
+    apt:
+      force_apt_get: yes
+      name: python3-pip
+      state: present
+
+  - name: Install Docker Python module
+    pip:
+      name: docker
+      state: present
+
+  - name: Download and install the DVWA container with docker
+    docker_container:
+      name: dvwa
+      image: cyberxsecurity/dvwa
+      state: started
+      restart_policy: always
+      published_ports: 80:80
+
+  - name: Enable the docker service
+    systemd:
+      name: docker
+      enabled: yes
